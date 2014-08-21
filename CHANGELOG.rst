@@ -1,6 +1,12 @@
 Normalize changelog and errata
 ==============================
 
+0.6.0 xth August 2014
+---------------------
+* Diff will now attempt to do fuzzy matching when comparing collections.
+  This should result in more fine-grained differences when comparing
+  data where the values have to be matched by content.
+
 0.5.2 5th August 2014
 ---------------------
 * You can now pass an object method to ``compare_as=`` on a property
