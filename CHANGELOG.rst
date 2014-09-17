@@ -1,11 +1,26 @@
 Normalize changelog and errata
 ==============================
 
-0.6.0 xth August 2014
----------------------
+0.7.0 xth October 2014
+----------------------
+* An excercise in "empty" records and slots... details t.b.a.
+
+0.6.0 xth September 2014
+------------------------
 * Diff will now attempt to do fuzzy matching when comparing collections.
   This should result in more fine-grained differences when comparing
   data where the values have to be matched by content.
+
+0.5.5 17th September 2014
+-------------------------
+* Lots of improvements to exceptions with the Visitor
+
+* More records should now round-trip ('visit' and 'cast') cleanly with
+  the default Visitor mappings; particularly ``RecordList`` types with
+  extra, extraneous properties.
+
+* ListProperties were allowing unsafe assignment; now all collections
+  will always be safe (unless marked 'unsafe' or read-only)
 
 0.5.4 20th August 2014
 ----------------------
