@@ -49,7 +49,7 @@ def has(selfie, self, args, kwargs):
     extra_traits = set(kwargs.pop('traits', tuple()))
 
     safe_unless_ro = self.__safe_unless_ro__ or any(
-        x in kwargs for x in ("required", "isa", "check")
+        x in kwargs for x in ("required", "isa", "check", "empty")
     )
     # detect initializer arguments only supported by a subclass and add
     # them to extra_traits

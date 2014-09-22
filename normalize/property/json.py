@@ -60,6 +60,8 @@ class JsonProperty(Property):
                 strings, in a form which can be reversed by the
                 ``json_in`` function.
         """
+        if 'empty' not in kwargs:
+            kwargs['empty'] = None
         super(JsonProperty, self).__init__(**kwargs)
         self._json_name = json_name
         self.json_in = json_in

@@ -165,6 +165,13 @@ class DiffOptionsException(UsageException):
     message = "pass options= or DiffOptions constructor arguments; not both"
 
 
+class EmptySignatureError(PropertyDefinitionError):
+    message = (
+        "empty functions must have no required arguments (except "
+        "'self'); {module}.{func} wants {nargs}"
+    )
+
+
 class FieldSelectorAttributeError(FieldSelectorException, AttributeError):
     message = "Could not find property specified by name: {name}"
 

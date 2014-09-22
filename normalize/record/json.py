@@ -173,7 +173,9 @@ def to_json(record, extraneous=True):
     elif isinstance(record, Record):
         rv_dict = {}
         for propname, prop in type(record).properties.iteritems():
-            if not extraneous and prop.extraneous:
+            if not prop.__hasattr__(record):
+                pass
+            elif not extraneous and prop.extraneous:
                 pass
             elif not hasattr(prop, "json_name") or prop.json_name is not None:
                 json_name = getattr(prop, "json_name", prop.name)
@@ -276,7 +278,7 @@ class JsonRecord(Record):
         jd = to_json(self, extraneous)
         if hasattr(self, "unknown_json_keys"):
             prop = type(self).properties['unknown_json_keys']
-            if extraneous or not prop.extraneous:
+            if (extraneous or not prop.extraneous) and prop.__hasattr__(self):
                 for k, v in self.unknown_json_keys.iteritems():
                     if k not in jd:
                         jd[k] = v

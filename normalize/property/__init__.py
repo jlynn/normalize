@@ -52,7 +52,7 @@ class Property(object):
 
     def __init__(self, isa=None,  coerce=None, check=None,
                  required=False, default=_none, traits=None,
-                 extraneous=False, doc=None):
+                 extraneous=False, doc=None, empty=AttributeError):
         """Declares a new standard Property.  Note: if you pass arguments which
         are not understood by this constructor, or pass extra property traits
         to ``traits``, then the call will be redirected to a sub-class; see
@@ -102,6 +102,15 @@ class Property(object):
 
             ``doc=``\ *STR*
                 Specify a docstring for the property.
+
+            ``empty=``\ *Exception Class*\ \|\ *Class*\|\ *Value*
+                Specify the return value when the attribute is accessed, but
+                the slot is empty.  If the value is a type, then that type is
+                constructed; with the attribute's 'full name' as the single
+                argument if you passed an Exception type.  Exception types and
+                values are always raised, not returned.  Finally, you can pass
+                a function, and if that function's first argument is 'self',
+                then it is called as a method.  Happy hacking!
         """
         self.name = None
         self.class_ = None
@@ -140,6 +149,20 @@ class Property(object):
         self.check = check
         self.valuetype = isa
         self.coerce = coerce or isa
+        self.empty = AttributeError if empty is Exception else empty
+        self.empty_is_method = False
+        self.empty_is_exception = isinstance(empty, Exception) or (
+            isinstance(empty, type) and issubclass(empty, Exception)
+        )
+        if not isinstance(empty, type) and callable(empty):
+            is_method, nargs = self.func_info(empty)
+            if nargs:
+                raise exc.EmptySignatureError(
+                    func=empty,
+                    module=empty.__module__,
+                    nargs=nargs,
+                )
+            self.empty_is_method = is_method
         if self.coerce and not self.valuetype:
             raise exc.CoerceWithoutType()
         self.extraneous = extraneous
@@ -178,9 +201,25 @@ class Property(object):
             classname = self.class_().__name__
         return "%s.%s" % (classname, self.name)
 
+    def value_is_empty(self, value):
+        """Tests the logical emptiness of the value passed in.
+        By default, this is true if the value is None.
+        If 'empty' is not an exception type, special rules apply.
+        """
+        if value is _none:
+            return True
+        elif not self.empty_is_exception:
+            # empty values are permitted.  Is this value empty?
+            if isinstance(self.empty, type):
+                return isinstance(value, self.empty)
+            elif callable(self.empty):
+                return False
+            else:
+                return self.empty == value
+        elif not self.valuetype:
+            return value is None
+
     def type_safe_value(self, value, _none_ok=False):
-        if value is None and self.required and not self.valuetype:
-            raise ValueError("%s is required" % self.fullname)
         if self.valuetype and not isinstance(value, self.valuetype):
             try:
                 new_value = self.coerce(value)
@@ -200,11 +239,13 @@ class Property(object):
                         self.valuetype.__name__
                     ),
                 )
+            if self.value_is_empty(new_value):
+                new_value = _none
             if not isinstance(new_value, self.valuetype):
-                if _none_ok and new_value is None and not self.required:
+                if _none_ok and new_value is _none and not self.required:
                     # allow coerce functions to return 'None' to silently
                     # swallow optional properties on initialization
-                    return _none
+                    value = _none
                 else:
                     raise exc.ValueCoercionError(
                         prop=self.fullname,
@@ -213,7 +254,10 @@ class Property(object):
                     )
             else:
                 value = new_value
-        if self.check and not self.check(value):
+
+        if self.check and (
+            not _none_ok or not self.value_is_empty(value)
+        ) and not self.check(value):
             raise ValueError(
                 "%s value '%r' failed type check" % (self.fullname, value)
             )
@@ -254,12 +298,31 @@ class Property(object):
         if obj is None:
             return self
         if self.name not in obj.__dict__:
-            raise AttributeError(self.fullname)
+            return self.__attribute_error__(obj)
         return obj.__dict__[self.name]
 
     def __str__(self):
         metaclass = str(type(self).__name__)
         return "<%s %s>" % (metaclass, self.fullname)
+
+    def __hasattr__(self, obj):
+        return self.name in obj.__dict__
+
+    def __attribute_error__(self, obj):
+        if isinstance(self.empty, type):
+            if issubclass(self.empty, Exception):
+                raise self.empty(self.fullname)
+            else:
+                return self.empty()
+        elif callable(self.empty):
+            if self.empty_is_method:
+                return self.empty(obj)
+            else:
+                return self.empty()
+        elif isinstance(self.empty, Exception):
+            raise self.empty
+        else:
+            return self.empty
 
 
 class LazyProperty(Property):
@@ -346,7 +409,12 @@ class SafeProperty(Property):
     def __set__(self, obj, value):
         """This setter checks the type of the value before allowing it to be
         set."""
-        obj.__dict__[self.name] = self.type_safe_value(value)
+        type_safe_value = self.type_safe_value(value, _none_ok=True)
+        if self.value_is_empty(type_safe_value):
+            if self.__hasattr__(obj):
+                self.__delete__(obj)
+        else:
+            obj.__dict__[self.name] = type_safe_value
 
     def __delete__(self, obj):
         """Checks the property's ``required`` setting, and allows the delete if

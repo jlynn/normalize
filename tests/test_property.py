@@ -412,7 +412,10 @@ class TestProperties(unittest2.TestCase):
         with self.assertRaisesRegexp(exc.ValueCoercionError, r'Mixed.id'):
             mixer = Mixed(id="-1")
 
-        mixer = Mixed(id="1", num="-6")
+        with self.assertRaisesRegexp(exc.ValueCoercionError, r'Mixed.num'):
+            mixer = Mixed(id="1", num="-6")
+
+        mixer = Mixed(id="1")
         with self.assertRaises(AttributeError):
             mixer.num
 

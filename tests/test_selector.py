@@ -49,7 +49,9 @@ class MockJsonRecord(JsonRecord):
         json_name='last_seen', isa=datetime,
         coerce=lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S'),
     )
-    children = JsonCollectionProperty(of=MockChildRecord)
+    children = JsonCollectionProperty(
+        of=MockChildRecord, default=[],
+    )
 
 
 class MockExtraneousJsonRecord(JsonRecord):

@@ -19,7 +19,10 @@
 from __future__ import absolute_import
 
 from datetime import datetime
+import unittest2
 
+from normalize import JsonProperty
+from normalize import JsonRecord
 from normalize import Property
 from normalize import Record
 import normalize.exc as exc
@@ -52,14 +55,35 @@ class TestRecords(unittest2.TestCase):
         sophie.age = 1
         self.assertEqual(VisitorPattern.visit(sophie), {"age": 1})
 
+        # setting a property to the empty value is the same as deleting it,
+        # even if the value passes the type constraint.
         sophie.age = 0
         self.assertEqual(VisitorPattern.visit(sophie), {})
+
+    def test_json_emptiness(self):
+        """JSON is ambiguous.  Deal with it."""
+
+        class SophiesJsonRecord(JsonRecord):
+            placeholder = JsonProperty()
+            aux_placeholder = JsonProperty(empty='')
+            age = JsonProperty(empty=0)
+            name = JsonProperty(empty=Exception)
+
+        sophie = SophiesJsonRecord({})
+        self.assertEqual(sophie.placeholder, None)
+        self.assertEqual(sophie.aux_placeholder, '')
+        self.assertEqual(sophie.age, 0)
+
+        with self.assertRaises(AttributeError):
+            sophie.name
+
+        self.assertEqual(sophie.json_data(), {})
 
     def test_functional_emptiness(self):
         """Test that functional empty values are transient"""
 
         class BlahRecord(Record):
-            blah = Property()
+            blah = Property(empty=None)
 
         class LambdaRecord(Record):
             epoch = Property(empty=lambda: datetime(1970, 1, 1, 0, 0, 0))
@@ -71,18 +95,21 @@ class TestRecords(unittest2.TestCase):
             lambda_.epoch.isoformat().startswith("1970-01-01T00:00:00"),
             "lambda empty values are called",
         )
-        lambda_.epoch.day = 2
-        self.assertEqual(lambda_.epoch.day, 1, "lambdas don't persist")
+
+        lambda_.objective.blah = "blah"
+        self.assertEqual(lambda_.objective.blah, None,
+                         "functions as empty values don't persist")
 
     def test_exceptional_emptiness(self):
 
         class ExplosiveRecord(Record):
-            bio = JsonProperty(empty=ValueError('fooo bar'))
-            about = JsonProperty(empty=IOError)
+            bio = Property(empty=ValueError('fooo bar'))
+            about = Property(empty=IOError)
 
         boom = ExplosiveRecord()
 
         with self.assertRaises(IOError):
             boom.about
 
-        
+        with self.assertRaises(ValueError):
+            boom.bio

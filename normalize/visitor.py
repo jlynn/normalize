@@ -237,7 +237,17 @@ class VisitorPattern(object):
         else:
             generator = None
 
-        return (lambda prop: prop.__get__(value)), generator
+        if visitor.apply_empty_slots:
+            get_value = lambda prop: prop.__get__(value)
+        else:
+
+            def get_value(prop, value=value):
+                if prop.__hasattr__(value):
+                    return prop.__get__(value)
+                else:
+                    raise AttributeError
+
+        return get_value, generator
 
     @classmethod
     def apply(cls, value, prop, visitor):
