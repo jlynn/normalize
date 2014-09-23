@@ -225,8 +225,8 @@ class FieldSelector(object):
                     record.append(type(record).itemtype())
                     record = record[selector]
             else:
-                if not hasattr(record, selector):
-                    prop = type(record).properties[selector]
+                prop = type(record).properties[selector]
+                if not prop.__hasattr__(record):
                     if not prop.valuetype:
                         raise FieldSelectorException(
                             "Must specify default= or isa= to auto-vivify "
