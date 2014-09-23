@@ -204,18 +204,11 @@ class Property(object):
     def value_is_empty(self, value):
         """Tests the logical emptiness of the value passed in.
         By default, this is true if the value is None.
-        If 'empty' is not an exception type, special rules apply.
         """
         if value is _none:
             return True
-        elif not self.empty_is_exception:
-            # empty values are permitted.  Is this value empty?
-            if isinstance(self.empty, type):
-                return isinstance(value, self.empty)
-            elif callable(self.empty):
-                return False
-            else:
-                return self.empty == value
+        elif not callable(value):
+            return self.empty == value
         elif not self.valuetype:
             return value is None
 
@@ -254,6 +247,9 @@ class Property(object):
                     )
             else:
                 value = new_value
+
+        if self.required and not self.valuetype and value is None:
+            raise ValueError("%s is required" % self.fullname)
 
         if self.check and (
             not _none_ok or not self.value_is_empty(value)
