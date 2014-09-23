@@ -111,6 +111,13 @@ class Property(object):
                 values are always raised, not returned.  Finally, you can pass
                 a function, and if that function's first argument is 'self',
                 then it is called as a method.  Happy hacking!
+
+            ``predicate=``\ *METHODNAME*
+                Specify a method that will be defined in the class which will
+                return a boolean, depending on whether or not the slot is
+                defined.  eg, if your attribute is called 'foo', you might set
+                this to 'has_foo'.  This avoids awkward guarding with
+                'hasattr', particularly where 'empty' is defined.
         """
         self.name = None
         self.class_ = None
