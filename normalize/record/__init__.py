@@ -176,7 +176,7 @@ class Record(object):
 
     def __nonzero__(self):
         for propname, prop in type(self).properties.iteritems():
-            if not prop.extraneous and not prop.__hasattr__(self):
+            if not prop.extraneous and prop.__hasattr__(self):
                 return True
         return False
 
