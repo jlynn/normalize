@@ -112,6 +112,13 @@ class AmbiguousConstruction(UsageException):
     message = "only init_dict or kwargs may be specified"
 
 
+class AttributeEmptyFault(PropertyDefinitionError, AttributeError):
+    message = (
+        "{prop_fullname} (and 'empty' function raised "
+        "{exc_type_name}: {exception})"
+    )
+
+
 class CoerceError(CoercionError):
     message = (
         "coerce to {valuetype} for {prop} failed with value {value}: "

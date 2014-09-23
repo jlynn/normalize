@@ -309,12 +309,28 @@ class Property(object):
             if issubclass(self.empty, Exception):
                 raise self.empty(self.fullname)
             else:
-                return self.empty()
+                try:
+                    return self.empty()
+                except Exception as e:
+                    raise exc.AttributeEmptyFault(
+                        exception=e,
+                        exc_type_name=type(e).__name__,
+                        prop_fullname=self.fullname,
+                        prop=self,
+                    )
         elif callable(self.empty):
-            if self.empty_is_method:
-                return self.empty(obj)
-            else:
-                return self.empty()
+            try:
+                if self.empty_is_method:
+                    return self.empty(obj)
+                else:
+                    return self.empty()
+            except Exception as e:
+                raise exc.AttributeEmptyFault(
+                    exception=e,
+                    exc_type_name=type(e).__name__,
+                    prop_fullname=self.fullname,
+                    prop=self,
+                )
         elif isinstance(self.empty, Exception):
             raise self.empty
         else:

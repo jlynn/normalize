@@ -26,6 +26,7 @@ from normalize import JsonRecord
 from normalize import Property
 from normalize import Record
 import normalize.exc as exc
+from normalize.property.types import DateProperty
 from normalize.visitor import VisitorPattern
 
 
@@ -113,3 +114,11 @@ class TestRecords(unittest2.TestCase):
 
         with self.assertRaises(ValueError):
             boom.bio
+
+    def test_bad_empty_constructors(self):
+
+        class DatedRecord(Record):
+            some_date_field = DateProperty(json_name="hello")
+
+        dated = DatedRecord()
+        self.assertEqual(getattr(dated, "some_date_field", "bob"), "bob")
