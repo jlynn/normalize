@@ -376,12 +376,18 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
         if options.is_filtered(prop, fs_a + propname):
             continue
 
-        propval_a = options.normalize_object_slot(
-            getattr(a, propname, _nothing), prop, a,
+        a_val = (
+            _nothing if not prop.__hasattr__(a) else
+             getattr(a, propname, _nothing)
         )
-        propval_b = options.normalize_object_slot(
-            getattr(b, propname, _nothing), prop, b,
+
+        b_val = (
+            _nothing if not options.duck_type and not prop.__hasattr__(b) else
+             getattr(b, propname, _nothing)
         )
+
+        propval_a = options.normalize_object_slot(a_val, prop, a)
+        propval_b = options.normalize_object_slot(b_val, prop, b)
 
         if propval_a is _nothing and propval_b is _nothing:
             # don't yield NO_CHANGE for fields missing on both sides
