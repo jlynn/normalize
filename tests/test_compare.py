@@ -361,7 +361,7 @@ class TestRecordComparison(unittest.TestCase):
         self.assertDifferences(
             compare_record_iter(
                 foo, Document(), options=DiffOptions(extraneous=True)
-            ), {"MODIFIED .unknown_json_keys"})
+            ), {"REMOVED .unknown_json_keys"})
 
         # 'ignore empty slots' should not affect this
         IES = DiffOptions(extraneous=True, ignore_empty_slots=True)

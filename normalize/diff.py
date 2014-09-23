@@ -378,12 +378,12 @@ def compare_record_iter(a, b, fs_a=None, fs_b=None, options=None):
 
         a_val = (
             _nothing if not prop.__hasattr__(a) else
-             getattr(a, propname, _nothing)
+            getattr(a, propname, _nothing)
         )
 
         b_val = (
             _nothing if not options.duck_type and not prop.__hasattr__(b) else
-             getattr(b, propname, _nothing)
+            getattr(b, propname, _nothing)
         )
 
         propval_a = options.normalize_object_slot(a_val, prop, a)
