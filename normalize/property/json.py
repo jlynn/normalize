@@ -61,7 +61,14 @@ class JsonProperty(Property):
                 ``json_in`` function.
         """
         if 'empty' not in kwargs:
-            kwargs['empty'] = None
+            # FIXME: misses many cases, eg collections.
+            # it's probably time to break up the Property __init__ to
+            # use pure python setters etc, so this doesn't have to be
+            # janky pre-construction arg stuffing.
+            empty = kwargs.get('isa', None)
+            if isinstance(empty, tuple):
+                empty = None
+            kwargs['empty'] = empty
         super(JsonProperty, self).__init__(**kwargs)
         self._json_name = json_name
         self.json_in = json_in
